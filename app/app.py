@@ -1,57 +1,68 @@
-from flask import Flask, render_template, request, redirect, url_for
-
-app = Flask(__name__)
-
-# In-memory storage for blog posts
-posts = []
+from flask import render_template, redirect, url_for, flash
+from flask_login import login_user, login_required, logout_user, current_user
+from models import app, db, User, Post, bcrypt
+from forms import RegisterForm, LoginForm, PostForm
 
 @app.route('/')
 def index():
+    posts = Post.query.all()
     return render_template('index.html', posts=posts)
 
+# REGISTER
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = User(username=form.username.data, password=hashed_pw)
+        db.session.add(user)
+        db.session.commit()
+        flash("Account created! You can now log in.", "success")
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
+
+# LOGIN
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash("Invalid username or password", "danger")
+    return render_template('login.html', form=form)
+
+# LOGOUT
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+# CREATE A POST
 @app.route('/create-post', methods=['GET', 'POST'])
+@login_required
 def create_post():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        content = request.form.get('content')
-
-        if not title or not content:
-            return render_template('create_post.html', error="Title and Content are required!")
-
-        post = {
-            "id": len(posts) + 1,
-            "title": title,
-            "content": content
-        }
-        posts.append(post)
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(title=form.title.data, content=form.content.data, user_id=current_user.id)
+        db.session.add(post)
+        db.session.commit()
         return redirect(url_for('index'))
+    return render_template('create_post.html', form=form)
 
-    return render_template('create_post.html')
-
-@app.route('/posts/<int:post_id>')
-def get_post(post_id):
-    post = next((p for p in posts if p["id"] == post_id), None)
-    if not post:
-        return "Post not found!", 404
-    return render_template('post.html', post=post)
-
-@app.route('/posts/<int:post_id>/edit', methods=['GET', 'POST'])
-def edit_post(post_id):
-    post = next((p for p in posts if p["id"] == post_id), None)
-    if not post:
-        return "Post not found!", 404
-
-    if request.method == 'POST':
-        post["title"] = request.form.get("title")
-        post["content"] = request.form.get("content")
-        return redirect(url_for('index'))
-
-    return render_template('edit_post.html', post=post)
-
+# DELETE A POST
 @app.route('/posts/<int:post_id>/delete', methods=['POST'])
+@login_required
 def delete_post(post_id):
-    global posts
-    posts = [p for p in posts if p["id"] != post_id]
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != current_user.id:
+        flash("Unauthorized action.", "danger")
+        return redirect(url_for('index'))
+    db.session.delete(post)
+    db.session.commit()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
