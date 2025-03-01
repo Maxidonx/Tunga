@@ -13,6 +13,11 @@ def index():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        if existing_user:
+            flash("Username already exists. Please choose a different one.", "danger")
+            return redirect(url_for('register'))
+        
         hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(username=form.username.data, password=hashed_pw)
         db.session.add(user)
@@ -27,12 +32,20 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            print(f"User found: {user.username}")
+        else:
+            print("User not found")
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for('index'))
         else:
             flash("Invalid username or password", "danger")
+            print("Invalid username or password")
+    else:
+        print("Form not validated")
     return render_template('login.html', form=form)
+    
 
 # LOGOUT
 @app.route('/logout')

@@ -16,7 +16,11 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 migrate = Migrate(app, db)
 
-# User Model
+migrate = Migrate(app, db)
+
+with app.app_context():
+    db.create_all()
+    
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
