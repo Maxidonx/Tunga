@@ -14,26 +14,23 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-migrate = Migrate(app, db)
+migrate = Migrate(app, db)  # Only one instance of Migrate
 
-migrate = Migrate(app, db)
-
-with app.app_context():
-    db.create_all()
-    
+# User Model
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(80), nullable=False)
-    posts = db.relationship('Post', backref='author', lazy=True)  # One-to-Many
+    password = db.Column(db.String(100), nullable=False)  # Increased size for hashed passwords
+    posts = db.relationship('Post', backref='author', lazy=True)  # One-to-Many Relationship
 
 # Blog Post Model
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(250), nullable=False)
     content = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Foreign Key
 
+# Flask-Login User Loader
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
