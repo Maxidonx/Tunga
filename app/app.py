@@ -18,32 +18,39 @@ def register():
             flash("Username already exists. Please choose a different one.", "danger")
             return redirect(url_for('register'))
         
+        # Check if passwords match (already handled by WTForms)
         hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(username=form.username.data, password=hashed_pw)
         db.session.add(user)
         db.session.commit()
-        flash("Account created! You can now log in.", "success")
-        return redirect(url_for('login'))
-    return render_template('register.html', form=form)
 
+        flash("Account created successfully! You can now log in.", "success")
+        return redirect(url_for('login'))
+    
+    return render_template('register.html', form=form)
 # LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
+        
         if user:
             print(f"User found: {user.username}")
+            print(f"Stored Hash: {user.password}")  # Debugging password hash
         else:
             print("User not found")
+        
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
+            flash("Login successful!", "success")
             return redirect(url_for('index'))
         else:
             flash("Invalid username or password", "danger")
             print("Invalid username or password")
     else:
         print("Form not validated")
+    
     return render_template('login.html', form=form)
     
 
@@ -52,6 +59,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    flash("You have been logged out.", "info")
     return redirect(url_for('login'))
 
 # CREATE A POST
