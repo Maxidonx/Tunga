@@ -15,7 +15,7 @@
         {{ form.password(class="form-control") }}
     </div>
     <button type="submit" class="btn btn-primary">{{ form.submit.label }}</button>
-    <button type="button" class="btn btn-primary" onclick="location.href='{{ url_for('register') }}'">Register</button>
+    <button type="button" class="btn btn-primary" onclick=location.href="{{ url_for('register') }}">Register</button>
     
 </form>
 {% for message in get_flashed_messages(with_categories=true) %}
