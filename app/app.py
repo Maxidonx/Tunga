@@ -1,8 +1,7 @@
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, login_required, logout_user, current_user
-from models import app, db, User, Post, bcrypt
-from forms import RegisterForm, LoginForm, PostForm
-
+from .models import app, db, User, Post, bcrypt
+from .forms import RegisterForm, LoginForm, PostForm
 
 with app.app_context():
     db.create_all()
@@ -61,29 +60,26 @@ def logout():
 def create_post():
     form = PostForm()
     
-    if form.validate_on_submit():
-        print("Form validated")  # Debugging
-
-        if current_user.is_authenticated:
-            print("Current User ID:", current_user.id)  # Debugging
-
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            print("Form validated successfully")
+    
+    # if form.validate_on_submit():
             new_post = Post(
                 title=form.title.data,
                 content=form.content.data,
                 user_id=current_user.id,
             )
             db.session.add(new_post)
-            db.session.flush()  # Debugging: Helps detect errors before commit
-            print("Flushed Post ID:", new_post.id)  # Debugging
             db.session.commit()
-            
-            print("New Post Created:", new_post.id, new_post.title, new_post.content)  # Debugging
             
             flash("Post created successfully!", "success")
             return redirect(url_for('index'))
+    
         else:
-            flash("You must be logged in to create a post.", "danger")
-
+               print("Form failed validation")
+               print(f"Validation errors: {form.errors}")    
+    
     return render_template('create_post.html', form=form)
 
 # UPDATE A POST
@@ -91,22 +87,22 @@ def create_post():
 @login_required
 def edit_post(post_id):
     post = Post.query.get_or_404(post_id)
+    
     if post.user_id != current_user.id:
         flash("You are not authorized to edit this post.", "danger")
         return redirect(url_for('index'))
-
-    form = PostForm()
+    
+    form = PostForm(obj=post)  # Pre-fill the form
+    
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
         db.session.commit()
         flash("Post updated successfully!", "success")
         return redirect(url_for('index'))
+    
+    return render_template('edit_post.html', form=form, post=post)
 
-    # Pre-fill form with post data
-    form.title.data = post.title
-    form.content.data = post.content
-    return render_template('edit_post.html', form=form)
 
 # DELETE A POST
 @app.route('/posts/<int:post_id>/delete', methods=['POST'])

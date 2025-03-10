@@ -3,42 +3,34 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin
 from flask_migrate import Migrate
-from sqlalchemy.orm import DeclarativeBase
 import os
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/john-maxwell/Tunga-Assignments/Tunga/app/instance/blog.db'
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "default_secret")  # Secure secret key
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Define Base Class for SQLAlchemy
-class Base(DeclarativeBase):
-    pass
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 # Initialize Extensions
-db = SQLAlchemy(model_class=Base)
+db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 migrate = Migrate(app, db)  # Enable migrations
 
-db.init_app(app)  # Ensure database initialization
-
 # User Model
 class User(db.Model, UserMixin):
-    id = db.mapped_column(db.Integer, primary_key=True)
-    username = db.mapped_column(db.String(50), unique=True, nullable=False)
-    password = db.mapped_column(db.String(100), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
     posts = db.relationship('Post', back_populates='author', cascade="all, delete-orphan")
 
 # Blog Post Model
 class Post(db.Model):
-    id = db.mapped_column(db.Integer, primary_key=True)
-    title = db.mapped_column(db.String(250), nullable=False)
-    content = db.mapped_column(db.Text, nullable=False)
-    user_id = db.mapped_column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(250), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)    
     author = db.relationship('User', back_populates='posts')
 
 # Flask-Login User Loader
