@@ -3,16 +3,29 @@
 {% block title %}Create New Post{% endblock %}
 
 {% block content %}
-<h2>Create New Post</h2>
-<form method="POST">
+<h2 class="mb-4">Create New Post</h2>
+
+<form method="POST" class="card p-4 shadow-sm">
+    {{ form.hidden_tag() }}  <!-- CSRF Protection -->
+
     <div class="mb-3">
-        <label class="form-label">Title:</label>
-        <input type="text" class="form-control" name="title" required>
+        <label class="form-label">{{ form.title.label }}</label>
+        {{ form.title(class="form-control", placeholder="Enter post title") }}
+        {% if form.title.errors %}
+            <small class="text-danger">{{ form.title.errors[0] }}</small>
+        {% endif %}
     </div>
+
     <div class="mb-3">
-        <label class="form-label">Content:</label>
-        <textarea class="form-control" name="content" required></textarea>
+        <label class="form-label">{{ form.content.label }}</label>
+        {{ form.content(class="form-control", rows=6, placeholder="Write your content here...") }}
+        {% if form.content.errors %}
+            <small class="text-danger">{{ form.content.errors[0] }}</small>
+        {% endif %}
     </div>
+
     <button type="submit" class="btn btn-success">Create Post</button>
 </form>
+
+<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
 {% endblock %}
