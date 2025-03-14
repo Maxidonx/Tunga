@@ -1,3 +1,4 @@
+<!-- filepath: /home/john-maxwell/Tunga-Assignments/Tunga/app/templates/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,15 +18,28 @@
             <a class="navbar-brand" href="{{ url_for('index') }}">Tunga Blog</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('create_post') }}">New Post</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Signin</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Signout</a></li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a href="{{ url_for('profile') }}">
+                                <img src="{{ url_for('static', filename='profile_picture/' + (current_user.profile_picture or 'default.jpg')) }}" 
+                                class="rounded-circle" width="40" height="40">
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('profile') }}">{{ current_user.username }}</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('create_post') }}">Create Post</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Signout</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Signin</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
-
+    
     <div class="container mt-4">
         {% block content %}{% endblock %}
     </div>
