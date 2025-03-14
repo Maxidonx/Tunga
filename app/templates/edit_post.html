@@ -3,29 +3,21 @@
 {% block title %}Edit Post{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Edit Post</h2>
-
-<form method="POST" class="card p-4 shadow-sm">
-    {{ form.hidden_tag() }}  <!-- CSRF Protection -->
-
-    <div class="mb-3">
-        <label class="form-label">{{ form.title.label }}</label>
+<h1>Edit Post</h1>
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+        {{ form.title.label }}
         {{ form.title(class="form-control", value=post.title) }}
-        {% if form.title.errors %}
-            <small class="text-danger">{{ form.title.errors[0] }}</small>
-        {% endif %}
     </div>
-
-    <div class="mb-3">
-        <label class="form-label">{{ form.content.label }}</label>
-        {{ form.content(class="form-control", rows=6) }}
-        {% if form.content.errors %}
-            <small class="text-danger">{{ form.content.errors[0] }}</small>
-        {% endif %}
+    <div class="form-group mt-3">
+        {{ form.content.label }}
+        {{ form.content(class="form-control") }}
     </div>
-
-    <button type="submit" class="btn btn-warning">Update Post</button>
+    <div class="form-group mt-3">
+        {{ form.image.label }}
+        {{ form.image(class="form-control-file") }}
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Update Post</button>
 </form>
-
-<a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Home</a>
 {% endblock %}

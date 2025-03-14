@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<h2>User Profile</h2>
+
+<!-- Show Profile Picture -->
+<img src="{{ url_for('static', filename='profile_picture/' + current_user.profile_picture or 'default.jpg') }}" 
+     class="rounded-circle mb-3" width="150" height="150">
+
+<!-- Show User Info -->
+<p><strong>Username:</strong> {{ current_user.username }}</p>
+<p><strong>Email:</strong> {{ current_user.email }}</p>
+<p><strong>First Name:</strong> {{ current_user.first_name or 'Not Set' }}</p>
+<p><strong>Last Name:</strong> {{ current_user.last_name or 'Not Set' }}</p>
+<p><strong>Date of Birth:</strong> {{ current_user.date_of_birth or 'Not Set' }}</p>
+
+<!-- buttong to hide the update form -->
+<button class="btn btn-primary mt-3" onclick="toggleUpdateForm()">Update Profile</button>
+<!-- Profile Update Form -->
+<div id="updateForm" style="display: none;">
+    <h3>Update Profile</h3>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.first_name.label }}
+            {{ form.first_name(class="form-control", value=current_user.first_name or '') }}
+        </div>
+        <div class="form-group mt-3">
+            {{ form.last_name.label }}
+            {{ form.last_name(class="form-control", value=current_user.last_name or '') }}
+        </div>
+        <div class="form-group mt-3">
+            {{ form.date_of_birth.label }}
+            {{ form.date_of_birth(class="form-control", value=current_user.date_of_birth or '') }}
+        </div>
+        <div class="form-group mt-3">
+            {{ form.profile_picture.label }}
+            {{ form.profile_picture(class="form-control") }}
+        </div>
+
+        <button type="submit" class="btn btn-success mt-3">Update Profile</button>
+    </form>
+</div>
+
+<script>
+function toggleUpdateForm() {
+    var form = document.getElementById('updateForm');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
