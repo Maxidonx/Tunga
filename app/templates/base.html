@@ -20,20 +20,20 @@
                 <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a href="{{ url_for('profile') }}">
+                            <a href="{{ url_for('user.profile') }}">
                                 <img src="{{ url_for('static', filename='profile_picture/' + (current_user.profile_picture or 'default.jpg')) }}" 
                                 class="rounded-circle" width="40" height="40">
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('profile') }}">{{ current_user.username }}</a>
+                            <a class="nav-link" href="{{ url_for('user.profile') }}">{{ current_user.username }}</a>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('create_post') }}">Create Post</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">Profile</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Signout</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('post.create_post') }}">Create Post</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('user.profile') }}">Profile</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Signout</a></li>
                     {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Signin</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Signin</a></li>
                     {% endif %}
                 </ul>
             </div>
