@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from app.config import Config
 
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -15,6 +16,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 migrate = Migrate(app, db)
 
-from app import models
-
 csrf = CSRFProtect(app)
+
+# from app import models
