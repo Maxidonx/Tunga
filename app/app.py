@@ -3,19 +3,18 @@ from app.post.models import Post
 from app.auth.models import User
 from flask import render_template, request
 
-
-
 from app import login_manager
-import os
 from app.auth.auth_blueprint import auth_blueprint
 from app.post.post_blueprint import post_blueprint
 from app.user.user_blueprint import user_blueprint
+from app.api.api_blueprint import  api_blueprint
 
 
 
 app.register_blueprint(auth_blueprint, url_prefix='/auth')
 app.register_blueprint(post_blueprint, url_prefix='/post')
 app.register_blueprint(user_blueprint, url_prefix='/user')
+app.register_blueprint(api_blueprint, url_prefix='/api') 
 
 
 @app.route('/')

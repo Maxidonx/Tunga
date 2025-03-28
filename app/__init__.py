@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -18,4 +19,3 @@ migrate = Migrate(app, db)
 
 csrf = CSRFProtect(app)
 
-# from app import models
