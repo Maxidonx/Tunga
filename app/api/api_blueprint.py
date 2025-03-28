@@ -1,3 +1,5 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource, reqparse
 from app import db, bcrypt
@@ -7,13 +9,28 @@ import jwt
 import datetime
 from functools import wraps
 from app.config import Config
+from flask import Flask
 
+
+app=Flask(__name__)
 # Create API Blueprint
 api_blueprint = Blueprint("api", __name__)
 api = Api(api_blueprint)
+log_file = "app.log"
+handler = RotatingFileHandler(log_file, maxBytes=100000, backupCount=3)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
 
+app.logger.setLevel(logging.ERROR)
 # JWT Secret Key
 SECRET_KEY = Config.SECRET_KEY
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Unhandled Exception: {str(e)}", exc_info=True)
+    return jsonify({'message': 'An error occurred while processing your request'}), 500
+
 
 # Middleware to check JWT tokens
 def token_required(f):
@@ -22,6 +39,7 @@ def token_required(f):
         token = request.headers.get('Authorization')
 
         if not token or " " not in token:
+            app.logger.warning('Token format is invalid!')
             return jsonify({'message': 'Token format is invalid!'}), 401
 
         try:
@@ -29,12 +47,16 @@ def token_required(f):
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             current_user = User.query.get(data["id"])
             if not current_user:
+                app.logger.warning('User not found for the token!')
                 return jsonify({'message': 'User not found'}), 401
         except jwt.ExpiredSignatureError:
+            app.logger.warning('Token has expired!')
             return jsonify({'message': 'Token has expired!'}), 401
         except jwt.InvalidTokenError:
+            app.logger.warning('Invalid token!')
             return jsonify({'message': 'Invalid token!'}), 401
         except Exception as e:
+            app.logger.error(f'Error decoding token: {str(e)}', exc_info=True)
             return jsonify({'message': f'Error: {str(e)}'}), 500
 
         return f(*args, current_user=current_user, **kwargs)
@@ -51,8 +73,10 @@ class Register(Resource):
         args = parser.parse_args()
 
         if User.query.filter_by(username=args['username']).first():
+            app.logger.info(f"Registration failed: Username '{args['username']}' already taken")
             return {'message': 'Username already taken'}, 400
         if User.query.filter_by(email=args['email']).first():
+            app.logger.info(f"Registration failed: Email '{args['email']}' already registered")
             return {'message': 'Email already registered'}, 400
 
         hashed_pw = bcrypt.generate_password_hash(args['password']).decode('utf-8')
@@ -60,6 +84,7 @@ class Register(Resource):
         db.session.add(user)
         db.session.commit()
 
+        app.logger.info(f"User '{args['username']}' registered successfully")
         return {'message': 'User registered successfully'}, 201
 
 # User Login API
@@ -73,8 +98,11 @@ class Login(Resource):
                 SECRET_KEY,
                 algorithm="HS256"
             )
+            app.logger.info(f"User '{user.email}' logged in successfully")
             return {'token': token}, 200
+        app.logger.warning(f"Login failed for email: {data.get('email')}")
         return {'message': 'Invalid credentials'}, 401
+
 
 # Get User Profile (Protected)
 class Profile(Resource):
@@ -136,10 +164,12 @@ class PostDetail(Resource):
     def delete(self, current_user, post_id):
         post = Post.query.get_or_404(post_id)
         if post.author != current_user:
+            app.logger.warning(f"Unauthorized delete attempt by user '{current_user.username}' on post ID {post_id}")
             return {'message': 'Unauthorized to delete this post'}, 403
 
         db.session.delete(post)
         db.session.commit()
+        app.logger.info(f"Post ID {post_id} deleted by user '{current_user.username}'")
         return {'message': 'Post deleted successfully'}, 200
 
 # Register API Routes
